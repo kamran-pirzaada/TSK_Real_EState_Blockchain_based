@@ -15,6 +15,7 @@ import {
   FaShare,
 } from 'react-icons/fa';
 import Contact from '../components/Contact';
+import Web3 from 'web3';
 
 // https://sabe.io/blog/javascript-format-numbers-commas#:~:text=The%20best%20way%20to%20format,format%20the%20number%20with%20commas.
 
@@ -27,6 +28,55 @@ export default function Listing() {
   const [contact, setContact] = useState(false);
   const params = useParams();
   const { currentUser } = useSelector((state) => state.user);
+
+  const [ web3, setWeb3 ] = useState(null);
+
+  const initializeWeb3 = async (dollarValue) => {
+    if (window.ethereum) {
+      const web3Instance = new Web3(window.ethereum);
+
+      console.log("Inside initializeWeb3")
+      try {
+        // Request access to user's MetaMask accounts
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        setWeb3(web3Instance);
+        sendETH(dollarValue)
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    } else {
+      console.error('MetaMask not detected');
+    }
+  };
+
+  // Function to send Ethereum
+  const sendETH = async (dollarValue) => {
+    if (!web3) {
+      console.error('Web3 not initialized');
+      return;
+    }
+
+    // Get user's accounts
+    const accounts = await web3.eth.getAccounts();
+    const ethValue = dollarValue/3500;
+
+    // Example: Send 0.1 ETH to a specified address
+    const recipientAddress = '0xe57a0C6336bf3a55d93247fd9f3CEA77b7A3b913'; // Replace with recipient's Ethereum address
+    const amountToSend = web3.utils.toWei(ethValue, 'ether'); // Convert to Wei
+    try {
+      const tx = await web3.eth.sendTransaction({
+        from: accounts[0],
+        to: recipientAddress,
+        value: amountToSend,
+        gasPrice: "20000000000",
+    gas: "21000",
+      });
+      console.log('Transaction Hash:', tx.transactionHash);
+    } catch (error) {
+      console.error('Error sending ETH:', error);
+    }
+  };
+
   
   useEffect(() => {
     const fetchListing = async () => {
@@ -49,6 +99,31 @@ export default function Listing() {
     };
     fetchListing();
   }, [params.listingId]);
+  
+  const handleBuyEther = async (amount) => {
+    if (window.sepolia) {
+      const web3 = new Web3(window.sepolia);
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      setWeb3(web3);
+    }
+    const value = web3.utils.toWei(amount, "ether");
+    console.log("value: " + value)
+    try {
+      const accounts = await web3.eth.getAccounts();
+      const tx = await web3.eth.sendTransaction({
+        from: accounts[0],
+        to: "0xe57a0C6336bf3a55d93247fd9f3CEA77b7A3b913",
+        value: web3.utils.toWei(amount, 'ether'),
+        
+      });
+      setTransactionHash(tx.transactionHash);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  
+
+  
 
   return (
     <main>
@@ -102,7 +177,20 @@ export default function Listing() {
             </p>
             <div className='flex gap-4'>
   <button
-    onClick={() => handleBuyOrSale(listing.type === 'rent' ? 'rent' : 'buy')}
+    onClick={() => {
+      // handleBuyOrSale(listing.type === 'rent' ? 'rent' : 'buy');
+//       handleBuyEther(listing.type === 'rent' ? 'rent' : 'buy');
+// ///////////stop[ppppp]
+// /////////
+// ////////
+      // handleBuyEther('amount');
+      let dollarValue = 0;
+      if(listing.offer) {
+        dollarValue = listing.discountPrice.toLocaleString('en-US')
+      } else {
+        dollarValue = listing.regularPrice.toLocaleString('en-US') }
+      initializeWeb3(dollarValue)
+    }}
     className={`${
       listing.type === 'rent' ? 'bg-red-900' : 'bg-green-900'
     } w-full max-w-[200px] text-white text-center p-1 rounded-md cursor-pointer`}

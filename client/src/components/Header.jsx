@@ -1,11 +1,14 @@
 import { FaSearch } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import Web3 from 'web3';
+
 import { useEffect, useState } from 'react';
 
 export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
   const [searchTerm, setSearchTerm] = useState('');
+  const [ account, setAccount ] = useState(null)
   const navigate = useNavigate();
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -22,6 +25,19 @@ export default function Header() {
       setSearchTerm(searchTermFromUrl);
     }
   }, [location.search]);
+
+  const connectWalletHandler = async () => {
+    try {
+      // Request account access
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+      // Get the account
+      const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+      setAccount(accounts[0]);
+    } catch (error) {
+      console.error(error);
+    }
+  }
   return (
     <header className='bg-slate-200 shadow-md'>
       <div className='flex justify-between items-center max-w-6xl mx-auto p-3'>
@@ -68,6 +84,8 @@ export default function Header() {
               <li className=' text-slate-700 hover:underline'> Sign in</li>
             )}
           </Link>
+          {account ? <p>{account}</p> : <button onClick={connectWalletHandler} className='bg-black p-2 rounded-2xl text-white'>Connect Wallet</button>}
+          
         </ul>
       </div>
     </header>
