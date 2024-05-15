@@ -178,12 +178,7 @@ export default function Listing() {
             <div className='flex gap-4'>
   <button
     onClick={() => {
-      // handleBuyOrSale(listing.type === 'rent' ? 'rent' : 'buy');
-//       handleBuyEther(listing.type === 'rent' ? 'rent' : 'buy');
-// ///////////stop[ppppp]
-// /////////
-// ////////
-      // handleBuyEther('amount');
+    
       let dollarValue = 0;
       if(listing.offer) {
         dollarValue = listing.discountPrice.toLocaleString('en-US')
